@@ -1,0 +1,82 @@
+import React from "react";
+import {
+  Landmark,
+  Compass,
+  Shovel,
+  Waves,
+  Waypoints,
+  Droplets,
+  Building2,
+  Layers,
+  Route,
+  Milestone,
+  GitCommitVertical,
+  Split,
+  Users,
+  Hammer,
+  Boxes,
+  Droplet,
+  ShieldCheck,
+  HardHat,
+  Award,
+  Truck,
+  Clock,
+  CheckCircle2,
+  Users2,
+  ShieldAlert,
+  TrafficCone,
+  Wrench,
+  ClipboardCheck,
+  Leaf,
+  FileSpreadsheet,
+  MessageSquareText,
+  MapPin,
+  Calculator,
+  CheckCircle,
+  LucideProps,
+} from "lucide-react";
+
+const iconMap: Record<string, React.ComponentType<LucideProps>> = {
+  Landmark,
+  Compass,
+  Shovel,
+  Waves,
+  Waypoints,
+  Droplets,
+  Building2,
+  Layers,
+  Route,
+  Milestone,
+  GitCommitVertical,
+  Split,
+  Users,
+  Hammer,
+  Boxes,
+  Droplet,
+  ShieldCheck,
+  HardHat,
+  Award,
+  Truck,
+  Clock,
+  CheckCircle2,
+  Users2,
+  ShieldAlert,
+  TrafficCone,
+  Wrench,
+  ClipboardCheck,
+  Leaf,
+  FileSpreadsheet,
+  MessageSquareText,
+  MapPin,
+  Calculator,
+  CheckCircle,
+};
+
+interface DynamicIconProps extends LucideProps {
+  name: string;
+}
+
+export const DynamicIcon: React.FC<DynamicIconProps> = ({ name, ...props }) => {
+  const IconComponent = iconMap[name] || Hammer;
+  return <IconComponent {...props} />;
+};
