@@ -34,7 +34,7 @@ export const siteConfig: SiteConfig = {
     addressArea: "Kaverivayal, Annur, Tamil Nadu, India",
     workingHours: "8:00 AM – 7:30 PM",
     workingDays: "Monday – Saturday (Sunday on-call for active projects)",
-    whatsappNumber: "919942803565",
+    whatsappNumber: "+9190800 72602",
     whatsappDefaultMessage: "Hello, I would like to enquire about your civil & infrastructure works.",
   },
 
