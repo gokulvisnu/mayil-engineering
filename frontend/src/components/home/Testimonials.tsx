@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { useManagedContent } from "@/hooks/useManagedContent";
 import { SectionHeading } from "../ui/SectionHeading";
+import { apiFetch } from "@/lib/api";
 
 export const Testimonials: React.FC = () => {
   const { testimonials } = useManagedContent();
@@ -13,7 +14,7 @@ export const Testimonials: React.FC = () => {
 
   async function submitReview(formData: FormData) {
     setSending(true);
-    const response = await fetch("/api/reviews", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(formData)) });
+    const response = await apiFetch("/api/reviews", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(formData)) });
     setSending(false);
     if (response.ok) setSent(true);
   }

@@ -1,29 +1,32 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Enquiry, ClientReview, ManagedContent } from "@/lib/content-store";
+import Link from "next/link";
+import type { Enquiry, ClientReview, ManagedContent } from "@/types/managed-content";
+import { apiFetch } from "@/lib/api";
+import { siteConfig } from "@/config/siteConfig";
 
 const blankProject = () => ({ id: `project-${Date.now()}`, title: "New project", category: "Public Works" as const, location: "", description: "", fullDetails: "", image: "", scope: [], completionTime: "" });
 const blankTestimonial = () => ({ id: `testimonial-${Date.now()}`, name: "", role: "Client", organization: "", content: "", rating: 5 });
 
 export function AdminDashboard() {
-  const [content, setContent] = useState<ManagedContent | null>(null);
+  const [content, setContent] = useState<ManagedContent | null>({ company: siteConfig.company, contact: siteConfig.contact, stats: siteConfig.stats, projects: siteConfig.projects, testimonials: siteConfig.testimonials });
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [reviews, setReviews] = useState<ClientReview[]>([]);
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
 
   async function load() {
-    const [contentResponse, inboxResponse] = await Promise.all([fetch("/api/admin/content"), fetch("/api/admin/inbox")]);
-    if (contentResponse.ok) setContent(await contentResponse.json());
+    const [contentResponse, inboxResponse] = await Promise.all([apiFetch("/api/admin/content", {}, true), apiFetch("/api/admin/inbox", {}, true)]);
+    if (contentResponse.ok) { const remoteContent = await contentResponse.json(); if (remoteContent?.company) setContent(remoteContent); }
     if (inboxResponse.ok) { const inbox = await inboxResponse.json(); setEnquiries(inbox.enquiries); setReviews(inbox.reviews); }
   }
-  useEffect(() => { load(); }, []);
+  useEffect(() => { const timer = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(timer); }, []);
 
   async function save(next = content) {
     if (!next) return;
     setSaving(true);
-    const response = await fetch("/api/admin/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next) });
+    const response = await apiFetch("/api/admin/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next) }, true);
     setSaving(false);
     if (response.ok) { setContent(await response.json()); setNotice("Saved. Public pages update on their next load."); }
     else setNotice("Could not save changes.");
@@ -31,13 +34,13 @@ export function AdminDashboard() {
   function update<K extends keyof ManagedContent>(key: K, value: ManagedContent[K]) { if (content) setContent({ ...content, [key]: value }); }
   async function upload(file: File, projectIndex: number) {
     const form = new FormData(); form.append("image", file);
-    const response = await fetch("/api/admin/upload", { method: "POST", body: form });
+    const response = await apiFetch("/api/admin/upload", { method: "POST", body: form }, true);
     if (!response.ok || !content) return setNotice("Image upload failed. Use JPG, PNG, or WebP under 5 MB.");
     const { url } = await response.json();
     const projects = [...content.projects]; projects[projectIndex] = { ...projects[projectIndex], image: url }; update("projects", projects);
   }
   async function setInboxStatus(kind: "enquiry" | "review", id: string, status: string) {
-    const response = await fetch("/api/admin/inbox", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, id, status }) });
+    const response = await apiFetch("/api/admin/inbox", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ kind, id, status }) }, true);
     if (!response.ok) return;
     const item = await response.json();
     if (kind === "review" && status === "approved" && content && !content.testimonials.some((testimonial) => testimonial.id === item.id)) {
@@ -50,7 +53,7 @@ export function AdminDashboard() {
   if (!content) return <main className="min-h-screen grid place-items-center bg-slate-100 text-slate-700">Loading admin dashboard…</main>;
   const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
   return <main className="min-h-screen bg-slate-100 p-4 sm:p-8"><div className="mx-auto max-w-7xl space-y-8">
-    <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-amber-700">Protected area</p><h1 className="text-3xl font-black text-slate-900">Admin dashboard</h1></div><div className="flex gap-3"><a href="/" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold">View website</a><button onClick={() => save()} disabled={saving} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{saving ? "Saving…" : "Save all changes"}</button></div></header>
+    <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-amber-700">Protected area</p><h1 className="text-3xl font-black text-slate-900">Admin dashboard</h1></div><div className="flex gap-3"><Link href="/" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold">View website</Link><button onClick={() => save()} disabled={saving} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{saving ? "Saving…" : "Save all changes"}</button></div></header>
     {notice && <p className="rounded-lg bg-amber-100 px-4 py-3 text-sm text-amber-900">{notice}</p>}
 
     <section className="rounded-2xl bg-white p-5 shadow-sm"><h2 className="text-xl font-black">Company details</h2><div className="mt-4 grid gap-3 md:grid-cols-2">

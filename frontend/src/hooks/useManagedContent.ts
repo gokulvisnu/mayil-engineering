@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { siteConfig } from "@/config/siteConfig";
-import type { ManagedContent } from "@/lib/content-store";
+import type { ManagedContent } from "@/types/managed-content";
+import { apiFetch } from "@/lib/api";
 
 const fallback: ManagedContent = {
   company: siteConfig.company,
@@ -16,9 +17,9 @@ export function useManagedContent() {
   const [content, setContent] = useState<ManagedContent>(fallback);
 
   useEffect(() => {
-    fetch("/api/content")
+    apiFetch("/api/content")
       .then((response) => (response.ok ? response.json() : null))
-      .then((data: ManagedContent | null) => data && setContent(data))
+      .then((data: ManagedContent | null) => data?.company && setContent(data))
       .catch(() => undefined);
   }, []);
 

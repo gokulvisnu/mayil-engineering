@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Split-app generated files
+**/node_modules/
+**/.next/
+**/dist/

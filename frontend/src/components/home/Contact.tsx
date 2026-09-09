@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle2, MessageSquare } from "lucide-react";
 import { useManagedContent } from "@/hooks/useManagedContent";
 import { SectionHeading } from "../ui/SectionHeading";
+import { apiFetch } from "@/lib/api";
 
 export const Contact: React.FC = () => {
   const { contact } = useManagedContent();
@@ -59,7 +60,7 @@ export const Contact: React.FC = () => {
     if (!validate()) return;
 
     setIsSubmitting(true);
-    const response = await fetch("/api/enquiries", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
+    const response = await apiFetch("/api/enquiries", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(formData) });
     const result = await response.json();
     setIsSubmitting(false);
     if (response.ok) {

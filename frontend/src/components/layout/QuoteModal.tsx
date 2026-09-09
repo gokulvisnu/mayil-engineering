@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { X, CheckCircle2, Phone, Send, MessageSquare } from "lucide-react";
 import { siteConfig } from "@/config/siteConfig";
+import { apiFetch } from "@/lib/api";
 
 interface QuoteModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
 
   useEffect(() => {
     if (initialService) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync the selected service when the modal receives a new quote target.
       setProjectType(initialService);
     }
   }, [initialService]);
@@ -71,7 +73,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
     if (!validate()) return;
 
     setIsSubmitting(true);
-    const response = await fetch("/api/enquiries", {
+    const response = await apiFetch("/api/enquiries", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fullName, phone, email, organization: orgName, projectType, location, details: message }),
