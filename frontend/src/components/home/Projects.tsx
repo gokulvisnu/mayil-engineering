@@ -39,7 +39,7 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenQuote }) => {
         <SectionHeading
           badge="Project Portfolio"
           title="Our Projects"
-          subtitle="Quality Work You Can See â€” Demonstrating engineering rigor and reliable on-ground execution across sectors."
+          subtitle="Quality Work You Can See Ã¢â‚¬â€ Demonstrating engineering rigor and reliable on-ground execution across sectors."
         />
 
         {/* Filter Buttons */}
@@ -79,7 +79,8 @@ export const Projects: React.FC<ProjectsProps> = ({ onOpenQuote }) => {
                     src={project.image}
                     alt={project.title}
                     fill
-                    sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
+                                        unoptimized
+sizes="(max-width: 767px) 100vw, (max-width: 1023px) 50vw, 33vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-80 group-hover:opacity-60 transition-opacity" />
