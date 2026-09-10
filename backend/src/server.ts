@@ -8,7 +8,7 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const defaultContent = {
   company: { name: "Mayil Engineering & Traders", tagline: "BUILDING BETTER COMMUNITIES THROUGH QUALITY INFRASTRUCTURE", subTagline: "Reliable Civil Construction & Infrastructure Solutions", shortDescription: "We deliver dependable civil construction and infrastructure solutions with a focus on quality, safety, durability and timely project execution.", fullDescription: "We deliver dependable civil construction and infrastructure solutions.", mission: "To deliver quality construction work.", qualityCommitment: "Quality, safety, and timely delivery.", establishedYear: 2014, headquarters: "Annur, Tamil Nadu, India" },
-  contact: { phoneDisplay: "99428 03565", phoneRaw: "+919942803565", whatsappNumber: "919080072602", gstin: "33DKAPM4088M1ZT", address: "No. B 2/2, ST-4, Dharmar Kovil Street, Kaverivayal, Annur – 641 653, Tamil Nadu, India", addressArea: "Kaverivayal, Annur, Tamil Nadu, India", workingHours: "8:00 AM – 7:30 PM", workingDays: "Monday – Saturday", whatsappDefaultMessage: "Hello, I would like to enquire about your works." },
+  contact: { phoneDisplay: "99428 03565", phoneRaw: "+919942803565", whatsappNumber: "919080072602", gstin: "33DKAPM4088M1ZT", address: "No. B 2/2, ST-4, Dharmar Kovil Street, Kaverivayal, Annur â€“ 641 653, Tamil Nadu, India", addressArea: "Kaverivayal, Annur, Tamil Nadu, India", workingHours: "8:00 AM â€“ 7:30 PM", workingDays: "Monday â€“ Saturday", whatsappDefaultMessage: "Hello, I would like to enquire about your works." },
   stats: [], projects: [], testimonials: []
 };
 
@@ -81,5 +81,25 @@ async function handleUpload(request: express.Request, response: express.Response
 }
 app.post("/api/admin/upload", requireAdmin, upload.single("image"), handleUpload);
 app.post("/api/admin/uploads", requireAdmin, upload.single("image"), handleUpload);
+
+function getProjectImagePath(imageUrl: unknown) {
+  if (typeof imageUrl !== "string") return null;
+  try {
+    const url = new URL(imageUrl);
+    const prefix = "/storage/v1/object/public/project-images/";
+    if (url.hostname !== new URL(config.supabaseUrl).hostname || !url.pathname.startsWith(prefix)) return null;
+    return decodeURIComponent(url.pathname.slice(prefix.length));
+  } catch {
+    return null;
+  }
+}
+
+app.delete("/api/admin/upload", requireAdmin, async (request, response) => {
+  const path = getProjectImagePath(request.body?.url);
+  if (!path) return response.status(400).json({ error: "Invalid project image URL." });
+  const { error } = await supabase.storage.from("project-images").remove([path]);
+  if (error) return response.status(500).json({ error: error.message });
+  return response.status(204).send();
+});
 
 app.listen(config.port, () => console.log(`Mayil backend running on port ${config.port}`));
