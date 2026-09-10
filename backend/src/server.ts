@@ -2,13 +2,14 @@ import express from "express";
 import cors from "cors";
 import multer from "multer";
 import { config, supabase } from "./config.js";
+import { getAuth } from "firebase-admin/auth";
 import { requireAdmin } from "./middleware/admin.js";
 
 const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const defaultContent = {
   company: { name: "Mayil Engineering & Traders", tagline: "BUILDING BETTER COMMUNITIES THROUGH QUALITY INFRASTRUCTURE", subTagline: "Reliable Civil Construction & Infrastructure Solutions", shortDescription: "We deliver dependable civil construction and infrastructure solutions with a focus on quality, safety, durability and timely project execution.", fullDescription: "We deliver dependable civil construction and infrastructure solutions.", mission: "To deliver quality construction work.", qualityCommitment: "Quality, safety, and timely delivery.", establishedYear: 2014, headquarters: "Annur, Tamil Nadu, India" },
-  contact: { phoneDisplay: "99428 03565", phoneRaw: "+919942803565", whatsappNumber: "919080072602", gstin: "33DKAPM4088M1ZT", address: "No. B 2/2, ST-4, Dharmar Kovil Street, Kaverivayal, Annur â€“ 641 653, Tamil Nadu, India", addressArea: "Kaverivayal, Annur, Tamil Nadu, India", workingHours: "8:00 AM â€“ 7:30 PM", workingDays: "Monday â€“ Saturday", whatsappDefaultMessage: "Hello, I would like to enquire about your works." },
+  contact: { phoneDisplay: "99428 03565", phoneRaw: "+919942803565", whatsappNumber: "919080072602", gstin: "33DKAPM4088M1ZT", address: "No. B 2/2, ST-4, Dharmar Kovil Street, Kaverivayal, Annur Ã¢â‚¬â€œ 641 653, Tamil Nadu, India", addressArea: "Kaverivayal, Annur, Tamil Nadu, India", workingHours: "8:00 AM Ã¢â‚¬â€œ 7:30 PM", workingDays: "Monday Ã¢â‚¬â€œ Saturday", whatsappDefaultMessage: "Hello, I would like to enquire about your works." },
   stats: [], projects: [], testimonials: []
 };
 
@@ -53,6 +54,46 @@ app.post("/api/reviews", async (request, response) => {
   const { data, error } = await supabase.from("reviews").insert({ name: name.trim(), role: role?.trim() || null, organization: organization?.trim() || null, content: content.trim(), rating: Math.min(5, Math.max(1, Number(rating) || 5)), status: "pending" }).select("id").single();
   if (error) return response.status(500).json({ error: error.message });
   response.status(201).json({ id: data.id });
+});
+
+function normalizeEmail(value: unknown) {
+  if (typeof value !== "string") return null;
+  const email = value.trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null;
+}
+
+app.get("/api/admin/admins", requireAdmin, async (_request, response) => {
+  const { data, error } = await supabase.from("admins").select("email, is_active, created_at").order("email");
+  if (error) return response.status(500).json({ error: error.message });
+  return response.json((data || []).map((admin) => ({ email: admin.email, isActive: admin.is_active, createdAt: admin.created_at })));
+});
+
+app.post("/api/admin/admins/lookup", requireAdmin, async (request, response) => {
+  const email = normalizeEmail(request.body?.email);
+  if (!email) return response.status(400).json({ exists: false, error: "Enter a valid email address." });
+  try {
+    const user = await getAuth().getUserByEmail(email);
+    return response.json({ exists: true, email: user.email?.toLowerCase() || email });
+  } catch {
+    return response.status(404).json({ exists: false, error: "This address has not signed in with Firebase Google login yet." });
+  }
+});
+
+app.post("/api/admin/admins", requireAdmin, async (request, response) => {
+  const email = normalizeEmail(request.body?.email);
+  if (!email) return response.status(400).json({ error: "Enter a valid email address." });
+  try { await getAuth().getUserByEmail(email); } catch { return response.status(400).json({ error: "This address has not signed in with Firebase Google login yet." }); }
+  const { data, error } = await supabase.from("admins").upsert({ email, is_active: true, updated_at: new Date().toISOString() }, { onConflict: "email" }).select("email, is_active, created_at").single();
+  if (error) return response.status(500).json({ error: error.message });
+  return response.status(201).json({ email: data.email, isActive: data.is_active, createdAt: data.created_at });
+});
+
+app.delete("/api/admin/admins", requireAdmin, async (request, response) => {
+  const email = normalizeEmail(request.body?.email);
+  if (!email) return response.status(400).json({ error: "Enter a valid email address." });
+  const { error } = await supabase.from("admins").update({ is_active: false, updated_at: new Date().toISOString() }).eq("email", email);
+  if (error) return response.status(500).json({ error: error.message });
+  return response.status(204).send();
 });
 
 app.get("/api/admin/inbox", requireAdmin, async (_request, response) => {
