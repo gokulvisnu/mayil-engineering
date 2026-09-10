@@ -13,7 +13,7 @@ export async function requireAdmin(request: Request, response: Response, next: N
   if (!token) return response.status(401).json({ error: "Authentication required" });
   try {
     const user = await getAuth().verifyIdToken(token);
-    if (user.email !== config.adminEmail) return response.status(403).json({ error: "Admin access required" });
+    if (!user.email || !config.adminEmails.includes(user.email.toLowerCase())) return response.status(403).json({ error: "Admin access required" });
     return next();
   } catch {
     return response.status(401).json({ error: "Invalid or expired sign-in token" });
