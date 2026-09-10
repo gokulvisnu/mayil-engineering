@@ -9,7 +9,7 @@ const app = express();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const defaultContent = {
   company: { name: "Mayil Engineering & Traders", tagline: "BUILDING BETTER COMMUNITIES THROUGH QUALITY INFRASTRUCTURE", subTagline: "Reliable Civil Construction & Infrastructure Solutions", shortDescription: "We deliver dependable civil construction and infrastructure solutions with a focus on quality, safety, durability and timely project execution.", fullDescription: "We deliver dependable civil construction and infrastructure solutions.", mission: "To deliver quality construction work.", qualityCommitment: "Quality, safety, and timely delivery.", establishedYear: 2014, headquarters: "Annur, Tamil Nadu, India" },
-  contact: { phoneDisplay: "99428 03565", phoneRaw: "+919942803565", whatsappNumber: "919080072602", gstin: "33DKAPM4088M1ZT", address: "No. B 2/2, ST-4, Dharmar Kovil Street, Kaverivayal, Annur Ã¢â‚¬â€œ 641 653, Tamil Nadu, India", addressArea: "Kaverivayal, Annur, Tamil Nadu, India", workingHours: "8:00 AM Ã¢â‚¬â€œ 7:30 PM", workingDays: "Monday Ã¢â‚¬â€œ Saturday", whatsappDefaultMessage: "Hello, I would like to enquire about your works." },
+  contact: { phoneDisplay: "99428 03565", phoneRaw: "+919942803565", whatsappNumber: "919080072602", gstin: "33DKAPM4088M1ZT", address: "No. B 2/2, ST-4, Dharmar Kovil Street, Kaverivayal, Annur ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ 641 653, Tamil Nadu, India", addressArea: "Kaverivayal, Annur, Tamil Nadu, India", workingHours: "8:00 AM ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ 7:30 PM", workingDays: "Monday ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ Saturday", whatsappDefaultMessage: "Hello, I would like to enquire about your works." },
   stats: [], projects: [], testimonials: []
 };
 
@@ -81,8 +81,7 @@ app.post("/api/admin/admins/lookup", requireAdmin, async (request, response) => 
 
 app.post("/api/admin/admins", requireAdmin, async (request, response) => {
   const email = normalizeEmail(request.body?.email);
-  if (!email) return response.status(400).json({ error: "Enter a valid email address." });
-  try { await getAuth().getUserByEmail(email); } catch { return response.status(400).json({ error: "This address has not signed in with Firebase Google login yet." }); }
+  if (!email) return response.status(400).json({ error: "Enter a valid Google email address." });
   const { data, error } = await supabase.from("admins").upsert({ email, is_active: true, updated_at: new Date().toISOString() }, { onConflict: "email" }).select("email, is_active, created_at").single();
   if (error) return response.status(500).json({ error: error.message });
   return response.status(201).json({ email: data.email, isActive: data.is_active, createdAt: data.created_at });
