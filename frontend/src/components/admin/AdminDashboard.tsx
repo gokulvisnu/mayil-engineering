@@ -18,10 +18,32 @@ const blankTestimonial = () => ({ id: `testimonial-${Date.now()}`, name: "", rol
 const isUploadedProjectImage = (url: string) => url.includes("/storage/v1/object/public/project-images/");
 type AdminRecord = { email: string; isActive: boolean; createdAt: string };
 
+function normalizeContent(value: Partial<ManagedContent>): ManagedContent {
+  return {
+    ...siteConfig,
+    ...value,
+    company: { ...siteConfig.company, ...value.company },
+    contact: { ...siteConfig.contact, ...value.contact },
+    maps: { ...siteConfig.maps, ...value.maps },
+    socialLinks: { ...siteConfig.socialLinks, ...value.socialLinks },
+    navLinks: value.navLinks ?? siteConfig.navLinks,
+    trustIndicators: value.trustIndicators ?? siteConfig.trustIndicators,
+    stats: value.stats ?? siteConfig.stats,
+    services: value.services ?? siteConfig.services,
+    developmentCategories: value.developmentCategories ?? siteConfig.developmentCategories,
+    projects: value.projects ?? siteConfig.projects,
+    equipment: value.equipment ?? siteConfig.equipment,
+    advantages: value.advantages ?? siteConfig.advantages,
+    safetyPriorities: value.safetyPriorities ?? siteConfig.safetyPriorities,
+    workProcess: value.workProcess ?? siteConfig.workProcess,
+    testimonials: value.testimonials ?? siteConfig.testimonials,
+  };
+}
+
 export function AdminDashboard() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [content, setContent] = useState<ManagedContent | null>(siteConfig as ManagedContent);
+  const [content, setContent] = useState<ManagedContent | null>(normalizeContent(siteConfig));
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [reviews, setReviews] = useState<ClientReview[]>([]);
   const [admins, setAdmins] = useState<AdminRecord[]>([]);
@@ -43,7 +65,7 @@ export function AdminDashboard() {
       if (!contentResponse.ok) return false;
       const remoteContent = await contentResponse.json();
       if (remoteContent?.company) {
-        setContent(remoteContent);
+        setContent(normalizeContent(remoteContent));
       }
       if (inboxResponse.ok) {
         const inbox = await inboxResponse.json();
@@ -82,7 +104,7 @@ export function AdminDashboard() {
     setSaving(true);
     const response = await apiFetch("/api/admin/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next) }, true);
     setSaving(false);
-    if (response.ok) { setManagedContent(await response.json()); setNotice("Saved. Public pages update on their next load."); }
+    if (response.ok) { setManagedContent(normalizeContent(await response.json())); setNotice("Saved. Public pages update on their next load."); }
     else setNotice("Could not save changes.");
   }
   function update<K extends keyof ManagedContent>(key: K, value: ManagedContent[K]) { if (content) setManagedContent({ ...content, [key]: value }); }
