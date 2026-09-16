@@ -425,7 +425,7 @@ export const siteConfig: SiteConfig = {
       specifications: ["50+ HP Engine", "Heavy Duty Trolley with Hydraulic Tipping", "Leveller blade attachment"],
       availability: "Available for Project Deployment",
       image:
-        "https://images.unsplash.com/photo-1592985737300-1ee418b794a0?auto=format&fit=crop&w=800&q=80",
+        "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?auto=format&fit=crop&w=800&q=80",
     },
     {
       id: "concrete-machinery",
