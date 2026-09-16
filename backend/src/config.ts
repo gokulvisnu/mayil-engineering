@@ -9,7 +9,13 @@ const required = (name: string) => {
 
 export const config = {
   port: Number(process.env.PORT || 4000),
-  frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
+  allowedOrigins: [
+    "https://www.mayilengineering.com",
+    "https://mayilengineering.com",
+    "https://mayil-engineering.vercel.app",
+    ...(process.env.FRONTEND_URL || "").split(","),
+    ...(process.env.CORS_ORIGINS || "").split(","),
+  ].map((origin) => origin.trim()).filter(Boolean),
   adminEmails: (process.env.ADMIN_EMAILS || required("ADMIN_EMAIL")).split(",").map((email) => email.trim().toLowerCase()).filter(Boolean),
   supabaseUrl: required("NEXT_PUBLIC_SUPABASE_URL"),
   supabaseSecretKey: required("SUPABASE_SECRET_KEY"),

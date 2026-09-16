@@ -13,7 +13,7 @@ const defaultContent = {
   stats: [], projects: [], testimonials: []
 };
 
-app.use(cors({ origin: config.frontendUrl, methods: ["GET", "POST", "PUT", "PATCH", "DELETE"], allowedHeaders: ["Content-Type", "Authorization"] }));
+app.use(cors({ origin: config.allowedOrigins, credentials: true, methods: ["GET", "POST", "PUT", "PATCH", "DELETE"], allowedHeaders: ["Content-Type", "Authorization"] }));
 app.use(express.json());
 app.get("/health", (_request, response) => response.json({ ok: true }));
 
