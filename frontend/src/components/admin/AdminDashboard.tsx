@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -25,8 +25,14 @@ export function AdminDashboard() {
   const [adminEmail, setAdminEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [jsonDraft, setJsonDraft] = useState(() => JSON.stringify(siteConfig, null, 2));
 
-  async function load() {
+  function setManagedContent(next: ManagedContent) {
+    setContent(next);
+    setJsonDraft(JSON.stringify(next, null, 2));
+  }
+
+  const load = useCallback(async function load() {
     try {
       const [contentResponse, inboxResponse, adminsResponse] = await Promise.all([
         apiFetch("/api/admin/content", {}, true),
@@ -35,7 +41,7 @@ export function AdminDashboard() {
       ]);
       if (!contentResponse.ok) return false;
       const remoteContent = await contentResponse.json();
-      if (remoteContent?.company) setContent(remoteContent);
+      if (remoteContent?.company) setManagedContent(remoteContent);
       if (inboxResponse.ok) {
         const inbox = await inboxResponse.json();
         setEnquiries(inbox.enquiries);
@@ -46,7 +52,7 @@ export function AdminDashboard() {
     } catch {
       return false;
     }
-  }
+  }, []);
 
   useEffect(() => {
     const auth = getFirebaseAuth();
@@ -66,17 +72,30 @@ export function AdminDashboard() {
         setAuthorized(true);
       });
     });
-  }, [router]);
+  }, [load, router]);
 
   async function save(next = content) {
     if (!next) return;
     setSaving(true);
     const response = await apiFetch("/api/admin/content", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(next) }, true);
     setSaving(false);
-    if (response.ok) { setContent(await response.json()); setNotice("Saved. Public pages update on their next load."); }
+    if (response.ok) { setManagedContent(await response.json()); setNotice("Saved. Public pages update on their next load."); }
     else setNotice("Could not save changes.");
   }
-  function update<K extends keyof ManagedContent>(key: K, value: ManagedContent[K]) { if (content) setContent({ ...content, [key]: value }); }
+  function applyJsonDraft() {
+    try {
+      const parsed = JSON.parse(jsonDraft) as ManagedContent;
+      if (!parsed?.company?.name || !parsed?.contact?.phoneDisplay) {
+        setNotice("Content must include a company name and primary phone display value.");
+        return;
+      }
+      setManagedContent(parsed);
+      setNotice("Full content loaded into the editor. Click Save all changes to publish it.");
+    } catch {
+      setNotice("The content editor contains invalid JSON. Check commas, quotes, and brackets.");
+    }
+  }
+  function update<K extends keyof ManagedContent>(key: K, value: ManagedContent[K]) { if (content) setManagedContent({ ...content, [key]: value }); }
   async function upload(file: File, projectIndex: number) {
     if (!content) return;
 
@@ -144,7 +163,7 @@ export function AdminDashboard() {
     const item = await response.json();
     if (kind === "review" && status === "approved" && content && !content.testimonials.some((testimonial) => testimonial.id === item.id)) {
       const next = { ...content, testimonials: [...content.testimonials, { id: item.id, name: item.name, role: item.role, organization: item.organization, content: item.content, rating: item.rating }] };
-      setContent(next); await save(next);
+      setManagedContent(next); await save(next);
     }
     await load();
   }
@@ -204,6 +223,26 @@ export function AdminDashboard() {
     </section>
 
     <section className="rounded-2xl bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xl font-black">Published client reviews</h2><button onClick={() => update('testimonials', [...content.testimonials, blankTestimonial()])} className="text-sm font-bold text-amber-700">+ Add review</button></div><div className="mt-4 grid gap-4 md:grid-cols-2">{content.testimonials.map((review,index) => <div key={review.id} className="rounded-xl border p-4 space-y-2"><input className={input} value={review.name} placeholder="Name" onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,name:e.target.value};update('testimonials',next)}} /><input className={input} value={review.organization} placeholder="Organization" onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,organization:e.target.value};update('testimonials',next)}} /><textarea className={input} value={review.content} placeholder="Review" onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,content:e.target.value};update('testimonials',next)}} /><select className={input} value={review.rating} onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,rating:Number(e.target.value)};update('testimonials',next)}}>{[1,2,3,4,5].map((n)=><option key={n} value={n}>{n} stars</option>)}</select><button onClick={()=>update('testimonials',content.testimonials.filter((_,i)=>i!==index))} className="text-xs font-bold text-red-700">Delete review</button></div>)}</div></section>
+
+    <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-black">All website content</h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-600">
+            This editor contains every configured section: company text, contact details, map, social links, trust indicators, services, community categories, projects, equipment, advantages, safety, work process, testimonials, and all image URLs. Edit the JSON, apply it, then save.
+          </p>
+        </div>
+        <button onClick={applyJsonDraft} className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950">Apply content</button>
+      </div>
+      <textarea
+        className="mt-4 min-h-[32rem] w-full rounded-lg border border-slate-300 bg-slate-950 px-4 py-3 font-mono text-xs leading-5 text-emerald-300"
+        value={jsonDraft}
+        onChange={(event) => setJsonDraft(event.target.value)}
+        spellCheck={false}
+        aria-label="All website content JSON"
+      />
+      <p className="mt-2 text-xs text-slate-500">Image fields accept public image URLs. Keep the existing field names and array structure when editing.</p>
+    </section>
 
     <section className="rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="text-xl font-black">Admin access</h2>
