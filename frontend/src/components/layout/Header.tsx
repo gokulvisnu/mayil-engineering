@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
           >
             <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl overflow-hidden bg-white shadow-lg shadow-amber-500/30 group-hover:scale-105 transition-transform">
               <Image
-                src="/logo%20mayil%20engineering.png"
+                src="/logo mayil engineering.png"
                 alt="Mayil Engineering & Traders logo"
                 width={44}
                 height={44}

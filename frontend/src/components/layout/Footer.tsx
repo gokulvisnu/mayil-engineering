@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-lg">
                 <Image
-                  src="/logo%20mayil%20engineering.png"
+                  src="/logo mayil engineering.png"
                   alt="Mayil Engineering & Traders logo"
                   width={40}
                   height={40}
