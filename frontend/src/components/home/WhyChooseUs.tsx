@@ -2,11 +2,13 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 import { SectionHeading } from "../ui/SectionHeading";
 import { DynamicIcon } from "../ui/DynamicIcon";
 
 export const WhyChooseUs: React.FC = () => {
+  const { advantages } = useManagedContent();
+
   return (
     <section className="py-20 lg:py-28 bg-slate-950 text-white relative overflow-hidden">
       {/* Background radial gradient */}
@@ -21,7 +23,7 @@ export const WhyChooseUs: React.FC = () => {
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
-          {siteConfig.advantages.map((adv, idx) => (
+          {advantages.map((adv, idx) => (
             <motion.div
               key={adv.id}
               initial={{ opacity: 0, y: 20 }}

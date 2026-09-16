@@ -3,8 +3,8 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Wrench, CheckCircle, Truck, ArrowRight } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { CheckCircle, Truck } from "lucide-react";
+import { useManagedContent } from "@/hooks/useManagedContent";
 import { SectionHeading } from "../ui/SectionHeading";
 
 interface EquipmentProps {
@@ -12,6 +12,8 @@ interface EquipmentProps {
 }
 
 export const Equipment: React.FC<EquipmentProps> = ({ onOpenQuote }) => {
+  const { equipment } = useManagedContent();
+
   return (
     <section id="equipment" className="py-20 lg:py-28 bg-slate-900 text-white relative overflow-hidden">
       {/* Subtle safety strip accent */}
@@ -26,7 +28,7 @@ export const Equipment: React.FC<EquipmentProps> = ({ onOpenQuote }) => {
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-          {siteConfig.equipment.map((item, idx) => (
+          {equipment.map((item, idx) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 20 }}

@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, FileText, HardHat } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 import { SectionHeading } from "../ui/SectionHeading";
 import { DynamicIcon } from "../ui/DynamicIcon";
 
@@ -13,6 +13,8 @@ interface PanchayatWorksProps {
 }
 
 export const PanchayatWorks: React.FC<PanchayatWorksProps> = ({ onOpenQuote }) => {
+  const { developmentCategories } = useManagedContent();
+
   return (
     <section id="public-works" className="py-20 lg:py-28 bg-slate-950 text-white relative overflow-hidden">
       {/* Subtle safety strip pattern accent at top */}
@@ -40,7 +42,7 @@ export const PanchayatWorks: React.FC<PanchayatWorksProps> = ({ onOpenQuote }) =
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-4">
-              {siteConfig.developmentCategories.map((category, idx) => (
+              {developmentCategories.map((category, idx) => (
                 <motion.div
                   key={category.id}
                   initial={{ opacity: 0, y: 15 }}

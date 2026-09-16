@@ -18,7 +18,7 @@ type AdminRecord = { email: string; isActive: boolean; createdAt: string };
 export function AdminDashboard() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [content, setContent] = useState<ManagedContent | null>({ company: siteConfig.company, contact: siteConfig.contact, stats: siteConfig.stats, projects: siteConfig.projects, testimonials: siteConfig.testimonials });
+  const [content, setContent] = useState<ManagedContent | null>(siteConfig as ManagedContent);
   const [enquiries, setEnquiries] = useState<Enquiry[]>([]);
   const [reviews, setReviews] = useState<ClientReview[]>([]);
   const [admins, setAdmins] = useState<AdminRecord[]>([]);

@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Menu, X, Phone, ChevronRight } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 
 interface HeaderProps {
   onOpenQuote: (service?: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
+  const { company, contact } = useManagedContent();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -73,10 +74,10 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
             </div>
             <div className="flex flex-col">
               <span className="text-lg sm:text-xl font-black tracking-tight text-white uppercase group-hover:text-amber-400 transition-colors">
-                Mayil Engineering <span className="text-amber-500">&amp; Traders</span>
+                {company.name}
               </span>
               <span className="text-[10px] sm:text-[11px] font-semibold text-slate-300 tracking-wider uppercase">
-                Civil & Infrastructure Contractor
+                {company.tagline}
               </span>
             </div>
           </a>
@@ -98,11 +99,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
           {/* Desktop CTA Buttons */}
           <div className="hidden sm:flex items-center gap-3">
             <a
-              href={`tel:${siteConfig.contact.phoneRaw}`}
+              href={`tel:${contact.phoneRaw}`}
               className="hidden md:flex items-center gap-2 text-xs font-bold text-slate-200 hover:text-amber-400 px-3 py-2 transition-colors"
             >
               <Phone className="w-4 h-4 text-amber-500" />
-              <span>{siteConfig.contact.phoneDisplay}</span>
+              <span>{contact.phoneDisplay}</span>
             </a>
             <button
               onClick={() => onOpenQuote()}
@@ -150,11 +151,11 @@ export const Header: React.FC<HeaderProps> = ({ onOpenQuote }) => {
 
           <div className="pt-4 mt-3 border-t border-slate-800/80 space-y-3">
             <a
-              href={`tel:${siteConfig.contact.phoneRaw}`}
+              href={`tel:${contact.phoneRaw}`}
               className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border border-slate-800 text-slate-200 font-bold text-sm bg-slate-900/80 hover:bg-slate-900"
             >
               <Phone className="w-4 h-4 text-amber-500" />
-              <span>Call: {siteConfig.contact.phoneDisplay}</span>
+              <span>Call: {contact.phoneDisplay}</span>
             </a>
             <button
               onClick={() => {

@@ -4,11 +4,13 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ShieldCheck, HardHat } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 import { SectionHeading } from "../ui/SectionHeading";
 import { DynamicIcon } from "../ui/DynamicIcon";
 
 export const SafetyQuality: React.FC = () => {
+  const { safetyPriorities } = useManagedContent();
+
   return (
     <section id="safety" className="py-20 lg:py-28 bg-slate-50 relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,7 +68,7 @@ export const SafetyQuality: React.FC = () => {
 
         {/* 8 Safety & Quality Pillars */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {siteConfig.safetyPriorities.map((item, idx) => (
+          {safetyPriorities.map((item, idx) => (
             <motion.div
               key={item.id}
               initial={{ opacity: 0, y: 15 }}

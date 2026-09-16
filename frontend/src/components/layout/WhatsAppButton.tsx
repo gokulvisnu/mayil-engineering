@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Phone, X } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 
 export const WhatsAppButton: React.FC = () => {
+  const { contact } = useManagedContent();
   const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
@@ -15,8 +16,8 @@ export const WhatsAppButton: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const whatsappUrl = `https://wa.me/${siteConfig.contact.whatsappNumber}?text=${encodeURIComponent(
-    siteConfig.contact.whatsappDefaultMessage
+  const whatsappUrl = `https://wa.me/${contact.whatsappNumber}?text=${encodeURIComponent(
+    contact.whatsappDefaultMessage
   )}`;
 
   return (
@@ -54,7 +55,7 @@ export const WhatsAppButton: React.FC = () => {
       {/* Mobile Sticky Bottom Action Bar (< 640px) */}
       <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-2.5 px-4 flex items-center gap-3">
         <a
-          href={`tel:${siteConfig.contact.phoneRaw}`}
+          href={`tel:${contact.phoneRaw}`}
           className="flex-1 flex items-center justify-center gap-2 py-3 px-3 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-xs active:bg-slate-800"
         >
           <Phone className="w-4 h-4 text-amber-500" />

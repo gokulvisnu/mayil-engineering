@@ -5,13 +5,7 @@ import { siteConfig } from "@/config/siteConfig";
 import type { ManagedContent } from "@/types/managed-content";
 import { apiFetch } from "@/lib/api";
 
-const fallback: ManagedContent = {
-  company: siteConfig.company,
-  contact: siteConfig.contact,
-  stats: siteConfig.stats,
-  projects: siteConfig.projects,
-  testimonials: siteConfig.testimonials,
-};
+const fallback: ManagedContent = siteConfig as ManagedContent;
 
 export function useManagedContent() {
   const [content, setContent] = useState<ManagedContent>(fallback);
@@ -19,7 +13,9 @@ export function useManagedContent() {
   useEffect(() => {
     apiFetch("/api/content")
       .then((response) => (response.ok ? response.json() : null))
-      .then((data: ManagedContent | null) => data?.company && setContent(data))
+      .then((data: ManagedContent | null) => {
+        if (data && data.company) setContent({ ...fallback, ...data });
+      })
       .catch(() => undefined);
   }, []);
 

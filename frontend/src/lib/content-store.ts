@@ -5,10 +5,7 @@ import path from "path";
 import { siteConfig } from "@/config/siteConfig";
 import type { ProjectItem, SiteConfig, StatItem, TestimonialItem } from "@/types";
 
-export type ManagedContent = Pick<
-  SiteConfig,
-  "company" | "contact" | "stats" | "projects" | "testimonials"
->;
+export type ManagedContent = SiteConfig;
 
 export interface Enquiry {
   id: string;
@@ -33,13 +30,7 @@ const contentFile = path.join(dataDirectory, "admin-content.json");
 const enquiriesFile = path.join(dataDirectory, "enquiries.json");
 const reviewsFile = path.join(dataDirectory, "client-reviews.json");
 
-const defaults: ManagedContent = {
-  company: siteConfig.company,
-  contact: siteConfig.contact,
-  stats: siteConfig.stats,
-  projects: siteConfig.projects,
-  testimonials: siteConfig.testimonials,
-};
+const defaults: ManagedContent = siteConfig as ManagedContent;
 
 async function readJson<T>(file: string, fallback: T): Promise<T> {
   try {
@@ -56,11 +47,24 @@ async function writeJson(file: string, value: unknown) {
 
 export async function getManagedContent() {
   const stored = await readJson<Partial<ManagedContent>>(contentFile, {});
+
   return {
     ...defaults,
     ...stored,
     company: { ...defaults.company, ...stored.company },
     contact: { ...defaults.contact, ...stored.contact },
+    maps: { ...defaults.maps, ...stored.maps },
+    socialLinks: { ...defaults.socialLinks, ...stored.socialLinks },
+    trustIndicators: stored.trustIndicators ?? defaults.trustIndicators,
+    stats: stored.stats ?? defaults.stats,
+    services: stored.services ?? defaults.services,
+    developmentCategories: stored.developmentCategories ?? defaults.developmentCategories,
+    projects: stored.projects ?? defaults.projects,
+    equipment: stored.equipment ?? defaults.equipment,
+    advantages: stored.advantages ?? defaults.advantages,
+    safetyPriorities: stored.safetyPriorities ?? defaults.safetyPriorities,
+    workProcess: stored.workProcess ?? defaults.workProcess,
+    testimonials: stored.testimonials ?? defaults.testimonials,
   } as ManagedContent;
 }
 

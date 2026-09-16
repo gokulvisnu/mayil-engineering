@@ -3,9 +3,10 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { Phone, Mail, MapPin, ChevronRight, X } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 
 export const Footer: React.FC = () => {
+  const { company, contact, socialLinks } = useManagedContent();
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -40,7 +41,7 @@ export const Footer: React.FC = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-lg font-black tracking-tight text-white uppercase">
-                  Mayil Engineering <span className="text-amber-500">&amp; Traders</span>
+                  {company.name}
                 </span>
                 <span className="text-[10px] font-semibold text-slate-400 tracking-wider uppercase">
                   Civil & Infrastructure Contractor
@@ -49,13 +50,13 @@ export const Footer: React.FC = () => {
             </div>
 
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-sm">
-              {siteConfig.company.shortDescription}
+              {company.shortDescription}
             </p>
 
             {/* Social Media Links with SVG */}
             <div className="flex items-center gap-3 pt-2">
               <a
-                href={siteConfig.socialLinks.facebook}
+                href={socialLinks.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center text-slate-300 transition-colors"
@@ -66,7 +67,7 @@ export const Footer: React.FC = () => {
                 </svg>
               </a>
               <a
-                href={siteConfig.socialLinks.instagram}
+                href={socialLinks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center text-slate-300 transition-colors"
@@ -77,7 +78,7 @@ export const Footer: React.FC = () => {
                 </svg>
               </a>
               <a
-                href={siteConfig.socialLinks.linkedin}
+                href={socialLinks.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center text-slate-300 transition-colors"
@@ -88,7 +89,7 @@ export const Footer: React.FC = () => {
                 </svg>
               </a>
               <a
-                href={siteConfig.socialLinks.youtube}
+                href={socialLinks.youtube}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-8 h-8 rounded-lg bg-slate-900 hover:bg-amber-500 hover:text-slate-950 flex items-center justify-center text-slate-300 transition-colors"
@@ -163,26 +164,26 @@ export const Footer: React.FC = () => {
               <div className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <span className="text-slate-300 leading-relaxed">
-                  {siteConfig.contact.address}
+                  {contact.address}
                 </span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-amber-500 shrink-0" />
                 <a
-                  href={`tel:${siteConfig.contact.phoneRaw}`}
+                  href={`tel:${contact.phoneRaw}`}
                   className="text-white hover:text-amber-400 transition-colors font-bold"
                 >
-                  {siteConfig.contact.phoneDisplay}
+                  {contact.phoneDisplay}
                 </a>
               </div>
-              {siteConfig.contact.email && (
+              {contact.email && (
                 <div className="flex items-center gap-2.5">
                   <Mail className="w-4 h-4 text-amber-500 shrink-0" />
                   <a
-                    href={`mailto:${siteConfig.contact.email}`}
+                    href={`mailto:${contact.email}`}
                     className="text-slate-300 hover:text-amber-400 transition-colors break-all"
                   >
-                    {siteConfig.contact.email}
+                    {contact.email}
                   </a>
                 </div>
               )}
@@ -192,7 +193,7 @@ export const Footer: React.FC = () => {
 
         {/* Bottom Copyright & Legal Links */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <p>© 2026 {siteConfig.company.name}. All Rights Reserved.</p>
+          <p>© 2026 {company.name}. All Rights Reserved.</p>
           <div className="flex items-center gap-6">
             <button
               onClick={() => setLegalModal("privacy")}
@@ -230,9 +231,9 @@ export const Footer: React.FC = () => {
                   ? "Mayil Engineering & Traders respects the privacy of all clients, project coordinators, and site visitors. Any enquiry details or contact data submitted through this website are used solely for project estimation and business communication. We do not sell or disclose client details to third parties."
                   : "All project timelines, bill of quantities (BOQ), and equipment rates displayed or submitted via quotation forms are estimates subject to formal site verification, soil survey, and mutual work order agreement. Works adhere strictly to applicable civil construction codes and statutory local body guidelines."}
               </p>
-              {siteConfig.contact.email && (
+              {contact.email && (
                 <p>
-                  For further clarifications regarding our policies, please contact our administrative desk at {siteConfig.contact.email}.
+                  For further clarifications regarding our policies, please contact our administrative desk at {contact.email}.
                 </p>
               )}
             </div>

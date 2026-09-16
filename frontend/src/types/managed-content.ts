@@ -1,6 +1,6 @@
 import type { SiteConfig } from "@/types";
 
-export type ManagedContent = Pick<SiteConfig, "company" | "contact" | "stats" | "projects" | "testimonials">;
+export type ManagedContent = SiteConfig;
 
 export interface Enquiry {
   id: string;

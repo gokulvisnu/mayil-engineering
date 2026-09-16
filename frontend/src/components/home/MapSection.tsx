@@ -1,10 +1,12 @@
 "use client";
 
 import React from "react";
-import { MapPin, Navigation, Info } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { MapPin, Navigation } from "lucide-react";
+import { useManagedContent } from "@/hooks/useManagedContent";
 
 export const MapSection: React.FC = () => {
+  const { company, contact, maps } = useManagedContent();
+
   return (
     <section className="bg-slate-100 py-12 border-t border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,7 +25,7 @@ export const MapSection: React.FC = () => {
           </div>
 
           <a
-            href={`https://maps.google.com/?q=${encodeURIComponent(siteConfig.contact.address)}`}
+            href={`https://maps.google.com/?q=${encodeURIComponent(contact.address)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors self-start sm:self-auto"
@@ -37,7 +39,7 @@ export const MapSection: React.FC = () => {
         <div className="relative w-full h-80 sm:h-96 rounded-2xl overflow-hidden border border-slate-300 shadow-md bg-slate-200">
           <iframe
             title="Office and Machinery Yard Location Map"
-            src={siteConfig.maps.embedUrl}
+            src={maps.embedUrl}
             width="100%"
             height="100%"
             style={{ border: 0 }}
@@ -48,8 +50,8 @@ export const MapSection: React.FC = () => {
           />
           {/* Overlay Tag */}
           <div className="absolute bottom-4 left-4 p-3 rounded-xl bg-slate-950/90 text-white backdrop-blur-md border border-slate-700/80 shadow-lg text-xs max-w-xs">
-            <span className="font-bold text-amber-400 block">{siteConfig.company.name}</span>
-            <span className="text-slate-300 text-[11px] mt-0.5 block">{siteConfig.maps.locationName}</span>
+            <span className="font-bold text-amber-400 block">{company.name}</span>
+            <span className="text-slate-300 text-[11px] mt-0.5 block">{maps.locationName}</span>
           </div>
         </div>
       </div>

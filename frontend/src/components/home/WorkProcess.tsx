@@ -2,11 +2,13 @@
 
 import React from "react";
 import { motion } from "framer-motion";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 import { SectionHeading } from "../ui/SectionHeading";
 import { DynamicIcon } from "../ui/DynamicIcon";
 
 export const WorkProcess: React.FC = () => {
+  const { workProcess } = useManagedContent();
+
   return (
     <section className="py-20 lg:py-28 bg-white relative overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -22,7 +24,7 @@ export const WorkProcess: React.FC = () => {
           <div className="absolute top-1/2 left-10 right-10 h-1 bg-amber-200 -translate-y-12 z-0" />
 
           <div className="grid grid-cols-5 gap-4 relative z-10">
-            {siteConfig.workProcess.map((process, idx) => (
+            {workProcess.map((process, idx) => (
               <motion.div
                 key={process.step}
                 initial={{ opacity: 0, y: 30 }}
@@ -59,7 +61,7 @@ export const WorkProcess: React.FC = () => {
 
         {/* Mobile & Tablet Vertical Timeline (visible on screens < 1024px) */}
         <div className="lg:hidden relative mt-10 space-y-8 pl-6 border-l-2 border-amber-400 ml-4">
-          {siteConfig.workProcess.map((process, idx) => (
+          {workProcess.map((process, idx) => (
             <motion.div
               key={process.step}
               initial={{ opacity: 0, x: -20 }}

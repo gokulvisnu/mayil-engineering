@@ -4,13 +4,14 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, HardHat, Truck, Clock, CheckCircle } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 
 interface HeroProps {
   onOpenQuote: () => void;
 }
 
 export const Hero: React.FC<HeroProps> = ({ onOpenQuote }) => {
+  const { company, trustIndicators } = useManagedContent();
   const trustIcons = [ShieldCheck, HardHat, Truck, Clock];
 
   const handleScrollToProjects = (e: React.MouseEvent) => {
@@ -52,7 +53,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenQuote }) => {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs sm:text-sm font-bold tracking-wider uppercase mb-6 backdrop-blur-md"
           >
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
-            <span>Civil & Infrastructure Works Contractor</span>
+            <span>{company.tagline}</span>
           </motion.div>
 
           {/* Main Headline */}
@@ -76,7 +77,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenQuote }) => {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="text-lg sm:text-2xl font-bold text-amber-400/90 mt-4 tracking-normal"
           >
-            {siteConfig.company.subTagline}
+            {company.subTagline}
           </motion.p>
 
           {/* Description */}
@@ -86,7 +87,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenQuote }) => {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="text-base sm:text-lg text-slate-300 mt-4 leading-relaxed font-normal max-w-2xl"
           >
-            “{siteConfig.company.shortDescription}”
+            “{company.shortDescription}”
           </motion.p>
 
           {/* Action Buttons */}
@@ -120,7 +121,7 @@ export const Hero: React.FC<HeroProps> = ({ onOpenQuote }) => {
             transition={{ duration: 0.7, delay: 0.5 }}
             className="mt-12 pt-8 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4"
           >
-            {siteConfig.trustIndicators.map((indicator, idx) => {
+            {trustIndicators.map((indicator, idx) => {
               const IconComp = trustIcons[idx] || CheckCircle;
               return (
                 <div

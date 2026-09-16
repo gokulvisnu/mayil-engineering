@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, CheckCircle2, Phone, Send, MessageSquare } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 import { apiFetch } from "@/lib/api";
 
 interface QuoteModalProps {
@@ -16,6 +16,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
   onClose,
   initialService = "",
 }) => {
+  const { contact } = useManagedContent();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -102,7 +103,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
     const text = encodeURIComponent(
       `Hello Mayil Engineering,\n\nI would like to request an estimate for:\nProject Type: ${projectType}\nName: ${fullName || "Client"}\nLocation: ${location || "Tamil Nadu"}\nPhone: ${phone || ""}\n\nDetails: ${message || "Please discuss requirements."}`
     );
-    window.open(`https://wa.me/${siteConfig.contact.whatsappNumber}?text=${text}`, "_blank");
+    window.open(`https://wa.me/${contact.whatsappNumber}?text=${text}`, "_blank");
   };
 
   return (
@@ -301,11 +302,11 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({
 
               <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <a
-                  href={`tel:${siteConfig.contact.phoneRaw}`}
+                  href={`tel:${contact.phoneRaw}`}
                   className="inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-amber-600 font-semibold"
                 >
                   <Phone className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Call {siteConfig.contact.phoneDisplay} directly</span>
+                  <span>Call {contact.phoneDisplay} directly</span>
                 </a>
 
                 <div className="flex items-center gap-2 w-full sm:w-auto">

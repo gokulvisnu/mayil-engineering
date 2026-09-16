@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
-import { siteConfig } from "@/config/siteConfig";
+import { useManagedContent } from "@/hooks/useManagedContent";
 import { ServiceItem } from "@/types";
 import { SectionHeading } from "../ui/SectionHeading";
 import { DynamicIcon } from "../ui/DynamicIcon";
@@ -15,6 +15,7 @@ interface ServicesProps {
 }
 
 export const Services: React.FC<ServicesProps> = ({ onOpenQuote }) => {
+  const { services } = useManagedContent();
   const [selectedService, setSelectedService] = useState<ServiceItem | null>(null);
 
   return (
@@ -31,7 +32,7 @@ export const Services: React.FC<ServicesProps> = ({ onOpenQuote }) => {
 
         {/* 8 Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-7">
-          {siteConfig.services.map((service, idx) => (
+          {services.map((service, idx) => (
             <motion.div
               key={service.id}
               initial={{ opacity: 0, y: 20 }}
