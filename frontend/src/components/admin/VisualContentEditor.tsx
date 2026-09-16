@@ -109,7 +109,7 @@ interface VisualContentEditorProps {
 }
 
 export function VisualContentEditor({ content, onChange, onUpload }: VisualContentEditorProps) {
-  const entries = Object.entries(content) as [keyof ManagedContent, EditorValue][];
+  const entries = (Object.entries(content) as [keyof ManagedContent, EditorValue][]).filter(([key]) => key !== "projects");
   return (
     <>
       <section className="rounded-2xl bg-white p-5 shadow-sm">

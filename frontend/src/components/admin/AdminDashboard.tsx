@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import type { Enquiry, ClientReview, ManagedContent } from "@/types/managed-content";
+import type { EquipmentItem } from "@/types";
 import { apiFetch } from "@/lib/api";
 import { siteConfig } from "@/config/siteConfig";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { VisualContentEditor } from "./VisualContentEditor";
 
 const blankProject = () => ({ id: `project-${Date.now()}`, title: "New project", category: "Public Works" as const, location: "", description: "", fullDetails: "", image: "", scope: [], completionTime: "" });
+const blankEquipment = (): EquipmentItem => ({ id: `equipment-${Date.now()}`, name: "New equipment", category: "", description: "", specifications: [], availability: "Available", image: "" });
 const blankTestimonial = () => ({ id: `testimonial-${Date.now()}`, name: "", role: "Client", organization: "", content: "", rating: 5 });
 const isUploadedProjectImage = (url: string) => url.includes("/storage/v1/object/public/project-images/");
 type AdminRecord = { email: string; isActive: boolean; createdAt: string };
@@ -236,6 +238,32 @@ export function AdminDashboard() {
           <input className="md:col-span-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" value={project.image} placeholder="Image URL (filled automatically after upload)" onChange={(event) => { const next=[...content.projects]; next[index]={...project,image:event.target.value}; update("projects",next); }} />
           <textarea className="md:col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm" value={project.scope.join("\n")} placeholder="Scope items, one per line" onChange={(event) => { const next=[...content.projects]; next[index]={...project,scope:event.target.value.split("\n").filter(Boolean)}; update("projects",next); }} />
           <button onClick={() => deleteProject(index)} className="w-fit text-xs font-bold text-red-700">Delete project</button>
+        </div>)}
+      </div>
+    </section>
+
+    <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-black">Equipment &amp; machinery</h2><button onClick={() => update("equipment", [...content.equipment, blankEquipment()])} className="text-sm font-bold text-amber-700">+ Add equipment</button></div>
+      <p className="mt-2 text-sm text-slate-600">Manage the equipment cards shown on the website. Upload or replace an image, edit the details, then save all changes.</p>
+      <div className="mt-4 space-y-5">
+        {content.equipment.map((equipment, index) => <div key={equipment.id} className="grid gap-3 rounded-xl border border-slate-200 p-4 md:grid-cols-2">
+          <div className="md:col-span-2 flex flex-col gap-4 rounded-xl bg-slate-50 p-3 sm:flex-row">
+            <div className="relative h-36 w-full overflow-hidden rounded-lg bg-slate-200 sm:w-56">
+              {equipment.image ? <Image src={equipment.image} alt={equipment.name || "Equipment image"} fill sizes="224px" unoptimized className="object-cover" /> : <div className="grid h-full place-items-center text-xs font-semibold text-slate-500">No equipment image</div>}
+            </div>
+            <div className="flex flex-1 flex-col justify-center gap-2">
+              <label className="w-fit cursor-pointer rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white">Upload / replace image<input className="hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; const url = await uploadContentImage(file); if (url) { const next = [...content.equipment]; next[index] = { ...equipment, image: url }; update("equipment", next); } event.target.value = ""; }} /></label>
+              <button onClick={() => { const next = [...content.equipment]; next[index] = { ...equipment, image: "" }; update("equipment", next); }} disabled={!equipment.image} className="w-fit text-sm font-bold text-red-700 disabled:cursor-not-allowed disabled:opacity-40">Remove image</button>
+              <p className="text-xs text-slate-500">JPG, PNG, or WebP; maximum 5 MB.</p>
+            </div>
+          </div>
+          <input className={input} value={equipment.name} placeholder="Equipment name" onChange={(event) => { const next = [...content.equipment]; next[index] = { ...equipment, name: event.target.value }; update("equipment", next); }} />
+          <input className={input} value={equipment.category} placeholder="Category" onChange={(event) => { const next = [...content.equipment]; next[index] = { ...equipment, category: event.target.value }; update("equipment", next); }} />
+          <textarea className={input} value={equipment.description} placeholder="Description" onChange={(event) => { const next = [...content.equipment]; next[index] = { ...equipment, description: event.target.value }; update("equipment", next); }} />
+          <input className={input} value={equipment.availability} placeholder="Availability" onChange={(event) => { const next = [...content.equipment]; next[index] = { ...equipment, availability: event.target.value }; update("equipment", next); }} />
+          <input className="md:col-span-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm" value={equipment.image} placeholder="Image URL" onChange={(event) => { const next = [...content.equipment]; next[index] = { ...equipment, image: event.target.value }; update("equipment", next); }} />
+          <textarea className="md:col-span-2 rounded-lg border border-slate-300 px-3 py-2 text-sm" value={equipment.specifications.join("\n")} placeholder="Specifications, one per line" onChange={(event) => { const next = [...content.equipment]; next[index] = { ...equipment, specifications: event.target.value.split("\n").filter(Boolean) }; update("equipment", next); }} />
+          <button onClick={() => update("equipment", content.equipment.filter((_, itemIndex) => itemIndex !== index))} className="w-fit text-xs font-bold text-red-700">Delete equipment</button>
         </div>)}
       </div>
     </section>
