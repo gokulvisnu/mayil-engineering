@@ -111,21 +111,23 @@ interface VisualContentEditorProps {
 export function VisualContentEditor({ content, onChange, onUpload }: VisualContentEditorProps) {
   const entries = Object.entries(content) as [keyof ManagedContent, EditorValue][];
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm">
-      <div>
+    <>
+      <section className="rounded-2xl bg-white p-5 shadow-sm">
         <h2 className="text-xl font-black">Website sections</h2>
         <p className="mt-2 text-sm text-slate-600">Open each section below to edit the website manually. Every field is editable without code. Use Add item or Delete on list content, then select Save all changes at the top.</p>
-      </div>
-      <div className="mt-5 space-y-3">
+      </section>
+      <div className="space-y-5">
         {entries.map(([key, value]) => (
-          <details key={String(key)} className="rounded-xl border border-slate-200 bg-slate-50 p-4" open={key === "company"}>
-            <summary className="cursor-pointer text-base font-black text-slate-900">{sectionLabels[key]}</summary>
-            <div className="mt-4">
-              <ValueEditor value={value} fieldKey={String(key)} onChange={(nextValue) => onChange({ ...content, [key]: nextValue } as ManagedContent)} onUpload={onUpload} />
-            </div>
-          </details>
+          <section key={String(key)} className="rounded-2xl bg-white p-5 shadow-sm">
+            <details open={key === "company"}>
+              <summary className="cursor-pointer text-base font-black text-slate-900">{sectionLabels[key]}</summary>
+              <div className="mt-4">
+                <ValueEditor value={value} fieldKey={String(key)} onChange={(nextValue) => onChange({ ...content, [key]: nextValue } as ManagedContent)} onUpload={onUpload} />
+              </div>
+            </details>
+          </section>
         ))}
       </div>
-    </section>
+    </>
   );
 }
