@@ -82,6 +82,7 @@ export interface TestimonialItem {
 }
 
 export interface SiteConfig {
+  navLinks: NavMenuItem[];
   company: {
     name: string;
     tagline: string;

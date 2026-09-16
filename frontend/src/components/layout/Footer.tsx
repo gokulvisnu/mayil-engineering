@@ -6,7 +6,7 @@ import { Phone, Mail, MapPin, ChevronRight, X } from "lucide-react";
 import { useManagedContent } from "@/hooks/useManagedContent";
 
 export const Footer: React.FC = () => {
-  const { company, contact, socialLinks } = useManagedContent();
+  const { company, contact, socialLinks, navLinks } = useManagedContent();
   const [legalModal, setLegalModal] = useState<"privacy" | "terms" | null>(null);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
@@ -108,15 +108,7 @@ export const Footer: React.FC = () => {
               Quick Links
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm">
-              {[
-                { name: "Home", href: "#home" },
-                { name: "About Us", href: "#about" },
-                { name: "Our Services", href: "#services" },
-                { name: "Public Works", href: "#public-works" },
-                { name: "Project Gallery", href: "#projects" },
-                { name: "Machinery Fleet", href: "#equipment" },
-                { name: "Contact Us", href: "#contact" },
-              ].map((link) => (
+              {navLinks.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}

@@ -6,6 +6,7 @@ type EditorValue = string | number | boolean | null | EditorValue[] | { [key: st
 type EditorObject = { [key: string]: EditorValue };
 
 const sectionLabels: Record<keyof ManagedContent, string> = {
+  navLinks: "Navigation Menu",
   company: "Company and About",
   contact: "Contact and Enquiry",
   maps: "Map and Location",
@@ -47,9 +48,10 @@ interface ValueEditorProps {
   fieldKey: string;
   onChange: (value: EditorValue) => void;
   onDelete?: () => void;
+  onUpload: (file: File) => Promise<string | null>;
 }
 
-function ValueEditor({ value, fieldKey, onChange, onDelete }: ValueEditorProps) {
+function ValueEditor({ value, fieldKey, onChange, onDelete, onUpload }: ValueEditorProps) {
   if (Array.isArray(value)) {
     return (
       <div className="mt-2 space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -59,7 +61,7 @@ function ValueEditor({ value, fieldKey, onChange, onDelete }: ValueEditorProps) 
               <span className="text-xs font-bold uppercase tracking-wide text-slate-500">Item {index + 1}</span>
               <button type="button" onClick={() => onChange(value.filter((_, itemIndex) => itemIndex !== index))} className="text-xs font-bold text-red-700">Delete</button>
             </div>
-            <ValueEditor value={item} fieldKey={fieldKey} onChange={(nextItem) => onChange(value.map((current, itemIndex) => itemIndex === index ? nextItem : current))} />
+            <ValueEditor value={item} fieldKey={fieldKey} onChange={(nextItem) => onChange(value.map((current, itemIndex) => itemIndex === index ? nextItem : current))} onUpload={onUpload} />
           </div>
         ))}
         <button type="button" onClick={() => onChange([...value, value.length ? blankValue(value[0]) : ""])} className="rounded-lg border border-amber-300 px-3 py-2 text-xs font-bold text-amber-800">+ Add item</button>
@@ -73,7 +75,7 @@ function ValueEditor({ value, fieldKey, onChange, onDelete }: ValueEditorProps) 
         {Object.entries(value).map(([key, childValue]) => (
           <label key={key} className={`text-sm font-semibold text-slate-700 ${typeof childValue === "object" && childValue !== null ? "md:col-span-2" : ""}`}>
             {labelFor(key)}
-            <ValueEditor value={childValue} fieldKey={key} onChange={(nextValue) => onChange({ ...value, [key]: nextValue })} />
+            <ValueEditor value={childValue} fieldKey={key} onChange={(nextValue) => onChange({ ...value, [key]: nextValue })} onUpload={onUpload} />
           </label>
         ))}
       </div>
@@ -89,7 +91,13 @@ function ValueEditor({ value, fieldKey, onChange, onDelete }: ValueEditorProps) 
       ) : (
         <input className={inputClass} type={typeof value === "number" ? "number" : "text"} value={stringValue} onChange={(event) => onChange(typeof value === "number" ? Number(event.target.value) : event.target.value)} />
       )}
-      {isImageField(fieldKey) && stringValue && <img src={stringValue} alt={`${labelFor(fieldKey)} preview`} className="mt-2 h-24 w-48 rounded-lg object-cover" />}
+      {isImageField(fieldKey) && <div className="mt-2 flex flex-wrap items-center gap-3">
+        <label className="cursor-pointer rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white">
+          Upload image
+          <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; const url = await onUpload(file); if (url) onChange(url); event.target.value = ""; }} />
+        </label>
+        {stringValue && <img src={stringValue} alt={`${labelFor(fieldKey)} preview`} className="h-24 w-48 rounded-lg object-cover" />}
+      </div>}
     </>
   );
 }
@@ -97,9 +105,10 @@ function ValueEditor({ value, fieldKey, onChange, onDelete }: ValueEditorProps) 
 interface VisualContentEditorProps {
   content: ManagedContent;
   onChange: (content: ManagedContent) => void;
+  onUpload: (file: File) => Promise<string | null>;
 }
 
-export function VisualContentEditor({ content, onChange }: VisualContentEditorProps) {
+export function VisualContentEditor({ content, onChange, onUpload }: VisualContentEditorProps) {
   const entries = Object.entries(content) as [keyof ManagedContent, EditorValue][];
   return (
     <section className="rounded-2xl bg-white p-5 shadow-sm">
@@ -112,7 +121,7 @@ export function VisualContentEditor({ content, onChange }: VisualContentEditorPr
           <details key={String(key)} className="rounded-xl border border-slate-200 bg-slate-50 p-4" open={key === "company"}>
             <summary className="cursor-pointer text-base font-black text-slate-900">{sectionLabels[key]}</summary>
             <div className="mt-4">
-              <ValueEditor value={value} fieldKey={String(key)} onChange={(nextValue) => onChange({ ...content, [key]: nextValue } as ManagedContent)} />
+              <ValueEditor value={value} fieldKey={String(key)} onChange={(nextValue) => onChange({ ...content, [key]: nextValue } as ManagedContent)} onUpload={onUpload} />
             </div>
           </details>
         ))}

@@ -84,6 +84,27 @@ export function AdminDashboard() {
     else setNotice("Could not save changes.");
   }
   function update<K extends keyof ManagedContent>(key: K, value: ManagedContent[K]) { if (content) setManagedContent({ ...content, [key]: value }); }
+  async function uploadContentImage(file: File) {
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      setNotice("Invalid image format. Upload only JPG, PNG, or WebP files.");
+      return null;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setNotice("Image is too large. Maximum allowed file size is 5 MB.");
+      return null;
+    }
+    const form = new FormData();
+    form.append("image", file);
+    const response = await apiFetch("/api/admin/upload", { method: "POST", body: form }, true);
+    if (!response.ok) {
+      setNotice("Image upload failed. Please try again.");
+      return null;
+    }
+    const { url } = await response.json();
+    setNotice("Image uploaded. Click Save all changes to publish it.");
+    return url as string;
+  }
   async function upload(file: File, projectIndex: number) {
     if (!content) return;
 
@@ -189,7 +210,7 @@ export function AdminDashboard() {
 
     <section className="rounded-2xl bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xl font-black">Key Milestones &amp; Track Record</h2><button onClick={() => update('stats', [...content.stats, { value: '', label: '', sublabel: '' }])} className="text-sm font-bold text-amber-700">+ Add milestone</button></div><div className="mt-4 grid gap-3 md:grid-cols-3">{content.stats.map((stat, index) => <div key={index} className="rounded-xl border p-3 space-y-2"><input className={input} placeholder="Value e.g. 50+" value={stat.value} onChange={(e) => { const next=[...content.stats]; next[index]={...stat,value:e.target.value};update('stats',next); }} /><input className={input} placeholder="Label" value={stat.label} onChange={(e) => { const next=[...content.stats]; next[index]={...stat,label:e.target.value};update('stats',next); }} /><button onClick={() => update('stats', content.stats.filter((_, i) => i !== index))} className="text-xs font-bold text-red-700">Delete</button></div>)}</div></section>
 
-    <VisualContentEditor content={content} onChange={setManagedContent} />
+    <VisualContentEditor content={content} onChange={setManagedContent} onUpload={uploadContentImage} />
 
     <section className="rounded-2xl bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-black">Project work &amp; images</h2><button onClick={() => update("projects", [...content.projects, blankProject()])} className="text-sm font-bold text-amber-700">+ Add project</button></div>

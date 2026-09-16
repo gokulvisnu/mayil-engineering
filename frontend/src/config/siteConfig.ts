@@ -10,6 +10,16 @@ import { SiteConfig } from "@/types";
  */
 
 export const siteConfig: SiteConfig = {
+  navLinks: [
+    { name: "Home", href: "#home" },
+    { name: "About", href: "#about" },
+    { name: "Services", href: "#services" },
+    { name: "Projects", href: "#projects" },
+    { name: "Equipment", href: "#equipment" },
+    { name: "Safety & Quality", href: "#safety" },
+    { name: "Contact", href: "#contact" },
+  ],
+
   company: {
     name: "Mayil Engineering & Traders",
     tagline: "BUILDING BETTER COMMUNITIES THROUGH QUALITY INFRASTRUCTURE",
