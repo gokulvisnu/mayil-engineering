@@ -9,36 +9,12 @@ import type { Enquiry, ClientReview, ManagedContent } from "@/types/managed-cont
 import { apiFetch } from "@/lib/api";
 import { siteConfig } from "@/config/siteConfig";
 import { getFirebaseAuth } from "@/lib/firebase";
+import { VisualContentEditor } from "./VisualContentEditor";
 
 const blankProject = () => ({ id: `project-${Date.now()}`, title: "New project", category: "Public Works" as const, location: "", description: "", fullDetails: "", image: "", scope: [], completionTime: "" });
 const blankTestimonial = () => ({ id: `testimonial-${Date.now()}`, name: "", role: "Client", organization: "", content: "", rating: 5 });
 const isUploadedProjectImage = (url: string) => url.includes("/storage/v1/object/public/project-images/");
 type AdminRecord = { email: string; isActive: boolean; createdAt: string };
-const editableSections = [
-  { key: "company", label: "Company text and about content" },
-  { key: "contact", label: "Contact and enquiry content" },
-  { key: "maps", label: "Map content" },
-  { key: "socialLinks", label: "Social links" },
-  { key: "trustIndicators", label: "Trust indicators" },
-  { key: "stats", label: "Milestones" },
-  { key: "services", label: "Services and service images" },
-  { key: "developmentCategories", label: "Community categories" },
-  { key: "projects", label: "Projects and project images" },
-  { key: "equipment", label: "Equipment and equipment images" },
-  { key: "advantages", label: "Why choose us" },
-  { key: "safetyPriorities", label: "Safety and quality" },
-  { key: "workProcess", label: "Work process" },
-  { key: "testimonials", label: "Testimonials" },
-] as const;
-type EditableSectionKey = (typeof editableSections)[number]["key"];
-
-function blankLike(value: unknown): unknown {
-  if (Array.isArray(value)) return [];
-  if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, key === "id" ? `${key}-${Date.now()}` : blankLike(item)]));
-  if (typeof value === "string") return "";
-  if (typeof value === "number") return 0;
-  return value;
-}
 
 export function AdminDashboard() {
   const router = useRouter();
@@ -50,15 +26,9 @@ export function AdminDashboard() {
   const [adminEmail, setAdminEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
-  const [jsonDraft, setJsonDraft] = useState(() => JSON.stringify(siteConfig, null, 2));
-  const [selectedSection, setSelectedSection] = useState<EditableSectionKey>("company");
-  const [selectedItem, setSelectedItem] = useState<number | null>(null);
-  const [sectionDraft, setSectionDraft] = useState(() => JSON.stringify(siteConfig.company, null, 2));
 
   function setManagedContent(next: ManagedContent) {
     setContent(next);
-    setJsonDraft(JSON.stringify(next, null, 2));
-    setSectionDraft(JSON.stringify(next[selectedSection], null, 2));
   }
 
   const load = useCallback(async function load() {
@@ -72,7 +42,6 @@ export function AdminDashboard() {
       const remoteContent = await contentResponse.json();
       if (remoteContent?.company) {
         setContent(remoteContent);
-        setJsonDraft(JSON.stringify(remoteContent, null, 2));
       }
       if (inboxResponse.ok) {
         const inbox = await inboxResponse.json();
@@ -114,69 +83,7 @@ export function AdminDashboard() {
     if (response.ok) { setManagedContent(await response.json()); setNotice("Saved. Public pages update on their next load."); }
     else setNotice("Could not save changes.");
   }
-  function applyJsonDraft() {
-    try {
-      const parsed = JSON.parse(jsonDraft) as ManagedContent;
-      if (!parsed?.company?.name || !parsed?.contact?.phoneDisplay) {
-        setNotice("Content must include a company name and primary phone display value.");
-        return;
-      }
-      setManagedContent(parsed);
-      setNotice("Full content loaded into the editor. Click Save all changes to publish it.");
-    } catch {
-      setNotice("The content editor contains invalid JSON. Check commas, quotes, and brackets.");
-    }
-  }
   function update<K extends keyof ManagedContent>(key: K, value: ManagedContent[K]) { if (content) setManagedContent({ ...content, [key]: value }); }
-  function selectSection(key: EditableSectionKey) {
-    if (!content) return;
-    setSelectedSection(key);
-    setSelectedItem(null);
-    setSectionDraft(JSON.stringify(content[key], null, 2));
-  }
-  function selectItem(index: number) {
-    if (!content) return;
-    const value = content[selectedSection];
-    if (!Array.isArray(value)) return;
-    setSelectedItem(index);
-    setSectionDraft(JSON.stringify(value[index], null, 2));
-  }
-  function addSectionItem() {
-    if (!content) return;
-    const value = content[selectedSection];
-    if (!Array.isArray(value)) return setNotice("Use the JSON editor below to update this object section.");
-    const item = value.length ? blankLike(value[0]) : {};
-    const nextValue = [...value, item] as typeof value;
-    setManagedContent({ ...content, [selectedSection]: nextValue } as ManagedContent);
-    setSelectedItem(nextValue.length - 1);
-    setSectionDraft(JSON.stringify(item, null, 2));
-    setNotice("New item added. Edit it, click Update item, then Save all changes.");
-  }
-  function updateSectionItem() {
-    if (!content) return;
-    let parsed: unknown;
-    try { parsed = JSON.parse(sectionDraft); } catch { setNotice("This section contains invalid JSON."); return; }
-    const value = content[selectedSection];
-    if (Array.isArray(value)) {
-      if (selectedItem === null) return setNotice("Select an item before updating it.");
-      const nextValue = [...value] as unknown[];
-      nextValue[selectedItem] = parsed;
-      setManagedContent({ ...content, [selectedSection]: nextValue } as ManagedContent);
-    } else {
-      setManagedContent({ ...content, [selectedSection]: parsed } as ManagedContent);
-    }
-    setNotice("Section updated. Click Save all changes to publish it.");
-  }
-  function deleteSectionItem() {
-    if (!content || selectedItem === null) return;
-    const value = content[selectedSection];
-    if (!Array.isArray(value)) return;
-    if (!window.confirm("Delete this content item? This change is published when you save.")) return;
-    const nextValue = value.filter((_, index) => index !== selectedItem);
-    setManagedContent({ ...content, [selectedSection]: nextValue } as ManagedContent);
-    setSelectedItem(null);
-    setSectionDraft(JSON.stringify(nextValue, null, 2));
-  }
   async function upload(file: File, projectIndex: number) {
     if (!content) return;
 
@@ -282,29 +189,7 @@ export function AdminDashboard() {
 
     <section className="rounded-2xl bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xl font-black">Key Milestones &amp; Track Record</h2><button onClick={() => update('stats', [...content.stats, { value: '', label: '', sublabel: '' }])} className="text-sm font-bold text-amber-700">+ Add milestone</button></div><div className="mt-4 grid gap-3 md:grid-cols-3">{content.stats.map((stat, index) => <div key={index} className="rounded-xl border p-3 space-y-2"><input className={input} placeholder="Value e.g. 50+" value={stat.value} onChange={(e) => { const next=[...content.stats]; next[index]={...stat,value:e.target.value};update('stats',next); }} /><input className={input} placeholder="Label" value={stat.label} onChange={(e) => { const next=[...content.stats]; next[index]={...stat,label:e.target.value};update('stats',next); }} /><button onClick={() => update('stats', content.stats.filter((_, i) => i !== index))} className="text-xs font-bold text-red-700">Delete</button></div>)}</div></section>
 
-    <section className="rounded-2xl bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black">Edit every website section</h2>
-          <p className="mt-2 max-w-3xl text-sm text-slate-600">Choose a section, select an item, edit its text or image URL, and use Update item. Array sections also support Add item and Delete item. Object sections edit all fields together.</p>
-        </div>
-        <button onClick={addSectionItem} className="rounded-lg border border-amber-300 px-4 py-2 text-sm font-bold text-amber-800">+ Add item</button>
-      </div>
-      <div className="mt-4 grid gap-4 lg:grid-cols-[18rem_1fr]">
-        <div className="space-y-2">
-          <label className="text-sm font-bold text-slate-700">Content section<select className={input} value={selectedSection} onChange={(event) => selectSection(event.target.value as EditableSectionKey)}>{editableSections.map((section) => <option key={section.key} value={section.key}>{section.label}</option>)}</select></label>
-          {Array.isArray(content[selectedSection]) && <div className="max-h-80 space-y-2 overflow-y-auto rounded-lg border border-slate-200 p-2">{(content[selectedSection] as unknown[]).map((item, index) => <button type="button" key={index} onClick={() => selectItem(index)} className={`block w-full rounded-lg px-3 py-2 text-left text-xs ${selectedItem === index ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-700 hover:bg-slate-100"}`}>{typeof item === "object" && item && "title" in item ? String(item.title) : typeof item === "object" && item && "name" in item ? String(item.name) : `Item ${index + 1}`}</button>)}</div>}
-        </div>
-        <div>
-          <textarea className="min-h-[22rem] w-full rounded-lg border border-slate-300 bg-slate-950 px-4 py-3 font-mono text-xs leading-5 text-emerald-300" value={sectionDraft} onChange={(event) => setSectionDraft(event.target.value)} spellCheck={false} aria-label="Selected content section" />
-          <div className="mt-3 flex flex-wrap gap-3">
-            <button onClick={updateSectionItem} className="rounded-lg bg-emerald-700 px-4 py-2 text-sm font-bold text-white">Update section</button>
-            {Array.isArray(content[selectedSection]) && <button onClick={deleteSectionItem} disabled={selectedItem === null} className="rounded-lg border border-red-200 px-4 py-2 text-sm font-bold text-red-700 disabled:opacity-40">Delete item</button>}
-          </div>
-          <p className="mt-2 text-xs text-slate-500">Image properties are editable as URLs in this editor. Project images can also be uploaded from the Project work section.</p>
-        </div>
-      </div>
-    </section>
+    <VisualContentEditor content={content} onChange={setManagedContent} />
 
     <section className="rounded-2xl bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between gap-4"><h2 className="text-xl font-black">Project work &amp; images</h2><button onClick={() => update("projects", [...content.projects, blankProject()])} className="text-sm font-bold text-amber-700">+ Add project</button></div>
@@ -335,26 +220,6 @@ export function AdminDashboard() {
     </section>
 
     <section className="rounded-2xl bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xl font-black">Published client reviews</h2><button onClick={() => update('testimonials', [...content.testimonials, blankTestimonial()])} className="text-sm font-bold text-amber-700">+ Add review</button></div><div className="mt-4 grid gap-4 md:grid-cols-2">{content.testimonials.map((review,index) => <div key={review.id} className="rounded-xl border p-4 space-y-2"><input className={input} value={review.name} placeholder="Name" onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,name:e.target.value};update('testimonials',next)}} /><input className={input} value={review.organization} placeholder="Organization" onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,organization:e.target.value};update('testimonials',next)}} /><textarea className={input} value={review.content} placeholder="Review" onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,content:e.target.value};update('testimonials',next)}} /><select className={input} value={review.rating} onChange={(e)=>{const next=[...content.testimonials];next[index]={...review,rating:Number(e.target.value)};update('testimonials',next)}}>{[1,2,3,4,5].map((n)=><option key={n} value={n}>{n} stars</option>)}</select><button onClick={()=>update('testimonials',content.testimonials.filter((_,i)=>i!==index))} className="text-xs font-bold text-red-700">Delete review</button></div>)}</div></section>
-
-    <section className="rounded-2xl bg-white p-5 shadow-sm">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-xl font-black">All website content</h2>
-          <p className="mt-2 max-w-3xl text-sm text-slate-600">
-            This editor contains every configured section: company text, contact details, map, social links, trust indicators, services, community categories, projects, equipment, advantages, safety, work process, testimonials, and all image URLs. Edit the JSON, apply it, then save.
-          </p>
-        </div>
-        <button onClick={applyJsonDraft} className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-slate-950">Apply content</button>
-      </div>
-      <textarea
-        className="mt-4 min-h-[32rem] w-full rounded-lg border border-slate-300 bg-slate-950 px-4 py-3 font-mono text-xs leading-5 text-emerald-300"
-        value={jsonDraft}
-        onChange={(event) => setJsonDraft(event.target.value)}
-        spellCheck={false}
-        aria-label="All website content JSON"
-      />
-      <p className="mt-2 text-xs text-slate-500">Image fields accept public image URLs. Keep the existing field names and array structure when editing.</p>
-    </section>
 
     <section className="rounded-2xl bg-white p-5 shadow-sm">
       <h2 className="text-xl font-black">Admin access</h2>
