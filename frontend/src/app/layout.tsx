@@ -40,6 +40,10 @@ export const metadata: Metadata = {
   authors: [{ name: siteConfig.company.name }],
   creator: siteConfig.company.name,
   publisher: siteConfig.company.name,
+  icons: {
+    icon: "/logo%20mayil%20engineering.png",
+    apple: "/logo%20mayil%20engineering.png",
+  },
   formatDetection: {
     email: true,
     address: true,

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { HardHat, Phone, Mail, MapPin, ChevronRight, X } from "lucide-react";
+import Image from "next/image";
+import { Phone, Mail, MapPin, ChevronRight, X } from "lucide-react";
 import { siteConfig } from "@/config/siteConfig";
 
 export const Footer: React.FC = () => {
@@ -28,8 +29,14 @@ export const Footer: React.FC = () => {
           {/* Col 1: Company Profile (4 cols) */}
           <div className="lg:col-span-4 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-black shadow-lg">
-                <HardHat className="w-6 h-6 stroke-[2.5]" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shadow-lg">
+                <Image
+                  src="/logo%20mayil%20engineering.png"
+                  alt="Mayil Engineering & Traders logo"
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-contain"
+                />
               </div>
               <div className="flex flex-col">
                 <span className="text-lg font-black tracking-tight text-white uppercase">
