@@ -41,8 +41,8 @@ export const metadata: Metadata = {
   creator: siteConfig.company.name,
   publisher: siteConfig.company.name,
   icons: {
-    icon: "/logo mayil engineering.png",
-    apple: "/logo mayil engineering.png",
+    icon: "/mayil-logo.png",
+    apple: "/mayil-logo.png",
   },
   formatDetection: {
     email: true,
