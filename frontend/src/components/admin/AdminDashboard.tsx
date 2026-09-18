@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -16,7 +16,46 @@ const blankProject = () => ({ id: `project-${Date.now()}`, title: "New project",
 const blankEquipment = (): EquipmentItem => ({ id: `equipment-${Date.now()}`, name: "New equipment", category: "", description: "", specifications: [], availability: "Available", image: "" });
 const blankTestimonial = () => ({ id: `testimonial-${Date.now()}`, name: "", role: "Client", organization: "", content: "", rating: 5 });
 const isUploadedProjectImage = (url: string) => url.includes("/storage/v1/object/public/project-images/");
+const customDetailPrefix = "customDetail_";
+const customDetailLabelPrefix = "customLabel_";
+const detailFieldRows = [
+  { key: "name", label: "Business name", source: "company" },
+  { key: "phoneDisplay", label: "Phone display", source: "contact" },
+  { key: "phoneRaw", label: "Primary phone (+91)", source: "contact" },
+  { key: "gstin", label: "GSTIN", source: "contact" },
+  { key: "address", label: "Address", source: "contact" },
+  { key: "whatsappNumber", label: "WhatsApp number", source: "contact" },
+] as const;
 type AdminRecord = { email: string; isActive: boolean; createdAt: string };
+type CompanyDetailRow = { id: string; key: string; label: string; value: string; source: "company" | "contact" };
+
+function getCustomLabelKey(id: string) {
+  return `${customDetailLabelPrefix}${id.replace(customDetailPrefix, "")}`;
+}
+
+function getCompanyDetailRows(content: ManagedContent): CompanyDetailRow[] {
+  const companyRecord = content.company as unknown as Record<string, string | number>;
+  const contactRecord = content.contact as unknown as Record<string, string | number>;
+  const customRows = Object.entries(companyRecord)
+    .filter(([key]) => key.startsWith(customDetailPrefix))
+    .map(([key, value]) => ({
+      id: key,
+      key,
+      label: String(companyRecord[getCustomLabelKey(key)] ?? "Custom detail"),
+      value: String(value ?? ""),
+      source: "company" as const,
+    }));
+
+  const rows = detailFieldRows.map(({ key, label, source }) => ({
+    id: `${source}-${key}`,
+    key,
+    label,
+    value: String((source === "company" ? companyRecord[key] : contactRecord[key]) ?? ""),
+    source,
+  }));
+
+  return [...rows, ...customRows];
+}
 
 function normalizeContent(value: Partial<ManagedContent>): ManagedContent {
   return {
@@ -50,10 +89,72 @@ export function AdminDashboard() {
   const [adminEmail, setAdminEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState("");
+  const [editingDetailId, setEditingDetailId] = useState<string | null>(null);
+  const [detailDraft, setDetailDraft] = useState({ label: "", value: "" });
+  const customDetailIdRef = useRef(0);
 
   function setManagedContent(next: ManagedContent) {
     setContent(next);
   }
+
+  function addCompanyDetail() {
+    if (!content) return;
+    customDetailIdRef.current += 1;
+    const detailId = `${customDetailPrefix}${customDetailIdRef.current}`;
+    const nextCompany = { ...content.company } as Record<string, string | number>;
+    nextCompany[detailId] = "";
+    nextCompany[getCustomLabelKey(detailId)] = "New detail";
+    update("company", nextCompany as unknown as typeof content.company);
+    setEditingDetailId(detailId);
+    setDetailDraft({ label: "New detail", value: "" });
+  }
+
+  function deleteCompanyDetail(row: CompanyDetailRow) {
+    if (!content) return;
+
+    if (row.source === "company" && row.id.startsWith(`${customDetailPrefix}`)) {
+      const nextCompany = { ...content.company } as Record<string, string | number>;
+      delete nextCompany[row.key];
+      delete nextCompany[getCustomLabelKey(row.key)];
+      update("company", nextCompany as unknown as typeof content.company);
+      if (editingDetailId === row.id) {
+        setEditingDetailId(null);
+        setDetailDraft({ label: "", value: "" });
+      }
+      return;
+    }
+
+    const next = row.source === "company" ? { ...content.company } : { ...content.contact };
+    const nextTarget = next as Record<string, string | number>;
+    nextTarget[row.key] = "";
+    update(row.source === "company" ? "company" : "contact", nextTarget as unknown as typeof next);
+    if (editingDetailId === row.id) {
+      setEditingDetailId(null);
+      setDetailDraft({ label: "", value: "" });
+    }
+  }
+
+  function saveCompanyDetailRow(row: CompanyDetailRow) {
+    if (!content) return;
+
+    if (row.source === "company" && row.id.startsWith(`${customDetailPrefix}`)) {
+      const nextCompany = { ...content.company } as Record<string, string | number>;
+      nextCompany[row.key] = detailDraft.value;
+      nextCompany[getCustomLabelKey(row.key)] = detailDraft.label;
+      update("company", nextCompany as unknown as typeof content.company);
+      setEditingDetailId(null);
+      setDetailDraft({ label: "", value: "" });
+      return;
+    }
+
+    const nextTarget = (row.source === "company" ? { ...content.company } : { ...content.contact }) as Record<string, string | number>;
+    nextTarget[row.key] = detailDraft.value;
+    update(row.source === "company" ? "company" : "contact", nextTarget as unknown as typeof content.company);
+    setEditingDetailId(null);
+    setDetailDraft({ label: "", value: "" });
+  }
+
+  const companyDetailRows = content ? getCompanyDetailRows(content) : [];
 
   const load = useCallback(async function load() {
     try {
@@ -225,12 +326,64 @@ export function AdminDashboard() {
     );
   const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
   return <main className="min-h-screen bg-slate-100 p-4 sm:p-8"><div className="mx-auto max-w-7xl space-y-8">
-    <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-amber-700">Protected area</p><h1 className="text-3xl font-black text-slate-900">Admin dashboard</h1></div><div className="flex gap-3"><Link href="/" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold">View website</Link><button onClick={() => save()} disabled={saving} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{saving ? "SavingÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦" : "Save all changes"}</button></div></header>
+    <header className="flex flex-wrap items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-amber-700">Protected area</p><h1 className="text-3xl font-black text-slate-900">Admin dashboard</h1></div><div className="flex gap-3"><Link href="/" className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-bold">View website</Link><button onClick={() => save()} disabled={saving} className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white disabled:opacity-60">{saving ? "Saving..." : "Save all changes"}</button></div></header>
     {notice && <p className="rounded-lg bg-amber-100 px-4 py-3 text-sm text-amber-900">{notice}</p>}
 
-    <section className="rounded-2xl bg-white p-5 shadow-sm"><h2 className="text-xl font-black">Company details</h2><div className="mt-4 grid gap-3 md:grid-cols-2">
-      {[['name','Business name'],['phoneDisplay','Phone display'],['phoneRaw','Primary phone (+91)'],['gstin','GSTIN'],['address','Address'],['whatsappNumber','WhatsApp number']].map(([key,label]) => <label key={key} className="text-sm font-semibold">{label}<input className={input} value={(key in content.company ? content.company : content.contact)[key as never] as string} onChange={(e) => key in content.company ? update('company', { ...content.company, [key]: e.target.value }) : update('contact', { ...content.contact, [key]: e.target.value })} /></label>)}
-    </div></section>
+    <section className="rounded-2xl bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-xl font-black">Company details</h2>
+        <button onClick={addCompanyDetail} className="text-sm font-bold text-amber-700">+ Add detail</button>
+      </div>
+      <div className="mt-4 grid gap-3 md:grid-cols-2">
+        {companyDetailRows.map((row) => {
+          const isEditing = editingDetailId === row.id;
+          const isCustom = row.id.startsWith(customDetailPrefix);
+
+          return (
+            <div key={row.id} className="rounded-xl border border-slate-200 p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-slate-700">{row.label}</span>
+                <div className="flex gap-2 text-xs font-bold">
+                  {isEditing ? (
+                    <button onClick={() => saveCompanyDetailRow(row)} className="text-emerald-700">Save</button>
+                  ) : (
+                    <button onClick={() => {
+                      setEditingDetailId(row.id);
+                      setDetailDraft({ label: row.label, value: row.value });
+                    }} className="text-amber-700">Edit</button>
+                  )}
+                  <button onClick={() => deleteCompanyDetail(row)} className="text-red-700">Delete</button>
+                </div>
+              </div>
+
+              {isEditing ? (
+                <div className="space-y-2">
+                  {!isCustom && <div className="text-xs text-slate-500">{row.label}</div>}
+                  {isCustom && (
+                    <input
+                      className={input}
+                      value={detailDraft.label}
+                      placeholder="Detail label"
+                      onChange={(event) => setDetailDraft((current) => ({ ...current, label: event.target.value }))}
+                    />
+                  )}
+                  <input
+                    className={input}
+                    value={detailDraft.value}
+                    placeholder="Detail value"
+                    onChange={(event) => setDetailDraft((current) => ({ ...current, value: event.target.value }))}
+                  />
+                </div>
+              ) : (
+                <div className="min-h-[42px] rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800">
+                  {row.value || "—"}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
 
     <section className="rounded-2xl bg-white p-5 shadow-sm"><div className="flex items-center justify-between"><h2 className="text-xl font-black">Key Milestones &amp; Track Record</h2><button onClick={() => update('stats', [...content.stats, { value: '', label: '', sublabel: '' }])} className="text-sm font-bold text-amber-700">+ Add milestone</button></div><div className="mt-4 grid gap-3 md:grid-cols-3">{content.stats.map((stat, index) => <div key={index} className="rounded-xl border p-3 space-y-2"><input className={input} placeholder="Value e.g. 50+" value={stat.value} onChange={(e) => { const next=[...content.stats]; next[index]={...stat,value:e.target.value};update('stats',next); }} /><input className={input} placeholder="Label" value={stat.label} onChange={(e) => { const next=[...content.stats]; next[index]={...stat,label:e.target.value};update('stats',next); }} /><button onClick={() => update('stats', content.stats.filter((_, i) => i !== index))} className="text-xs font-bold text-red-700">Delete</button></div>)}</div></section>
 
